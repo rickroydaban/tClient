@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package com.example.client;
+package abanyu.transphone.client;
 
 public final class Manifest {
     public static final class permission {

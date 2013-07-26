@@ -18,16 +18,11 @@
 
 package abanyu.transphone.client;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -36,7 +31,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.client.R;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
@@ -67,8 +61,8 @@ public class ClientActivity extends FragmentActivity implements LocationListener
   private int locationUpdateByDist = 10; //location will be updated every 10 meters
   
   //LOCAL CONSTANTS
-  private String GPS = "GPS";
-  private String NETWORK = "Network";
+//  private String GPS = "GPS";
+//  private String NETWORK = "Network";
   private String Source = "Source";
   private String Destination = "Destination";
   
@@ -91,7 +85,6 @@ public class ClientActivity extends FragmentActivity implements LocationListener
       criteria.setAccuracy(Criteria.ACCURACY_FINE);
       criteria.setPowerRequirement(Criteria.POWER_LOW);
       
-       
 	  locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);       
 	  locationProvider = locationManager.getBestProvider(criteria, true);
 	  //NOTE: on obstructed places, GPS may took longer times to have a position fix compared to wireless network
@@ -107,7 +100,6 @@ public class ClientActivity extends FragmentActivity implements LocationListener
        
       
 	  //apply location change listeners to the location manager
-      
       locationManager.requestLocationUpdates(locationProvider, locationUpdateByTime, locationUpdateByDist, this); 
 
       map.setOnMapClickListener(new OnMapClickListener() {
@@ -137,7 +129,8 @@ public class ClientActivity extends FragmentActivity implements LocationListener
 	    @Override
 		public void onClick(View v) {
 		  if (desCoords!=null)
-		    new UnitGetterThread(ClientActivity.this, srcCoords, desCoords).execute();
+			//requests a unit to the server
+		    new ServerSpeakerThread(ClientActivity.this, srcCoords, desCoords).execute();
 		}
 	  });
 
@@ -154,9 +147,7 @@ public class ClientActivity extends FragmentActivity implements LocationListener
   }
       
 	@Override
-	public void onLocationChanged(Location location) {
-      
-	  System.out.println("Your location: " + location.getLongitude());
+	public void onLocationChanged(Location location) {      
 	  srcCoords = new LatLng(location.getLatitude(), location.getLongitude());
 	  
 	  if(srcMarkerOptions==null)
@@ -228,7 +219,7 @@ public class ClientActivity extends FragmentActivity implements LocationListener
 		url.append("&sensor=false&mode=driving&alternatives=true");
 		return url.toString();
 	}
-	
+	/*
 	private void enableLocationProvider(String locationProviderCriteria){
 	  String mLocationProvider = "";
 	  
@@ -255,6 +246,6 @@ public class ClientActivity extends FragmentActivity implements LocationListener
 	    alertDialog.setCanceledOnTouchOutside(false);
 	    alertDialog.show();        
 	}
-  }
+  }*/
 }
 

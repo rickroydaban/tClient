@@ -1,6 +1,5 @@
 package abanyu.transphone.client;
 
-import com.example.client.R;
 
 import android.app.Activity;
 import android.os.Bundle;

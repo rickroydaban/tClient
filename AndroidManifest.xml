@@ -27,11 +27,11 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/client"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="abanyu.transphone.client.ClientActivity"
+            android:name="abanyu.transphone.client.OnlineActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask">
             <intent-filter>
@@ -39,6 +39,12 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        
+        <activity 
+            android:name="abanyu.transphone.client.ClientActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTask" >
         </activity>
         
         <activity 

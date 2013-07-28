@@ -90,7 +90,7 @@ public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
     closeClientConnection(); //close the connection to save power from running unused threads
     progressDialog.hide(); //hides the progress bar
     Intent intent = new Intent(clientActivity, TaxiInfo.class); //notify the client to the the result of his/her request
-    intent.putExtra("server_msg", result.plateNo);//insert the server message
+    intent.putExtra("server_msg", result);//insert the server message
     clientActivity.startActivity(intent);
   }
   

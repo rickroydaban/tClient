@@ -5,10 +5,64 @@
     android:orientation="vertical" 
     android:background="#000000">
 
-    <TextView 
-        android:id="@+id/text"
+    <TextView
+        android:id="@+id/plateno"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#ffffff"/>
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:text="Plate Number: "
+        android:layout_marginTop="20dp"/>
+    
+    <TextView
+        android:id="@+id/bodyno"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:text="Body Number: "
+        android:layout_marginTop="20dp"/>
+	
+    <TextView
+        android:id="@+id/taxidesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:text="Taxi Description: "
+        android:layout_marginTop="20dp"/>
+    
+    <TextView
+        android:id="@+id/compname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:text="Company Name: "
+        android:layout_marginTop="20dp"/>
+    
+    <TextView
+        android:id="@+id/compno"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:text="Company Number: "
+        android:layout_marginTop="20dp"/>
+    
+    <TextView
+        android:id="@+id/drivername"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16dp"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:text="Driver Name: "
+        android:layout_marginTop="20dp"/>
 
 </LinearLayout>

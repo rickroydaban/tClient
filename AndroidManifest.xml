@@ -29,9 +29,9 @@
         android:allowBackup="true"
         android:icon="@drawable/client"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+		android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
         <activity
-            android:name="abanyu.transphone.client.OnlineActivity"
+            android:name="abanyu.transphone.client.view.ConnectionUnavailable"
             android:label="@string/app_name"
             android:launchMode="singleTask">
             <intent-filter>
@@ -42,13 +42,13 @@
         </activity>
         
         <activity 
-            android:name="abanyu.transphone.client.ClientActivity"
+            android:name="abanyu.transphone.client.view.ClientMap"
             android:label="@string/app_name"
             android:launchMode="singleTask" >
         </activity>
         
         <activity 
-            android:name="abanyu.transphone.client.TaxiInfo"
+            android:name="abanyu.transphone.client.view.RequestedTaxiData"
             android:label="@string/app_name"
             android:launchMode="singleTask" >
         </activity>

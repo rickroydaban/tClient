@@ -1,4 +1,4 @@
-package abanyu.transphone.client;
+package abanyu.transphone.client.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,29 +7,31 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import abanyu.transphone.client.view.ClientMap;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-public class DrawPathAsyncTask extends AsyncTask<Void, Void, String> {
+public class RouteDrawer extends AsyncTask<Void, Void, String> {
 	//parameters for onPreExecute, doInBackground, onPostExecute respectively
 	
-	private Context context;
+	private ClientMap clientMap;
 	private String url;
 	private ProgressDialog progressDialog;
+	private Map map;
 	
-	public DrawPathAsyncTask(Context clientMapContext, String stringUrl){
-		context = clientMapContext;
+	public RouteDrawer(ClientMap pClientMap, Map pMap, String stringUrl){
+		clientMap = pClientMap;
+		map = pMap;
 		url = stringUrl; //this url is created by the makeUrl() function
 	}
 	
 	protected void onPreExecute() {
 		super.onPreExecute();
-		progressDialog = new ProgressDialog(context);
+		progressDialog = new ProgressDialog(clientMap);
 		progressDialog.setMessage("Tracing route between markers, please wait...");
 		progressDialog.setIndeterminate(true);
 		progressDialog.show();
@@ -62,8 +64,8 @@ public class DrawPathAsyncTask extends AsyncTask<Void, Void, String> {
 			for(int i = 0; i < list.size()-1; i++){ //-1 because it is using a look ahead manipulation method to prevent array out of bounds
 				LatLng src = list.get(i);
 				LatLng dest = list.get(i+1);
-				ClientActivity.line = ClientActivity.map.addPolyline(new PolylineOptions().add(new LatLng(src.latitude, src.longitude), new LatLng(dest.latitude, dest.longitude))
-				.width(2).color(Color.BLUE).geodesic(true));
+				map.setRoute(map.getMap().addPolyline(new PolylineOptions().add(new LatLng(src.latitude, src.longitude), new LatLng(dest.latitude, dest.longitude))
+				.width(2).color(Color.BLUE).geodesic(true)));
 			}
 			
 		} catch (JSONException e) {

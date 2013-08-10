@@ -1,4 +1,4 @@
-package abanyu.transphone.client;
+package abanyu.transphone.client.model;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -6,26 +6,29 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import abanyu.transphone.client.view.ClientMap;
+import abanyu.transphone.client.view.RequestedTaxiData;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.widget.Toast;
 import com.google.android.gms.maps.model.LatLng;
 
-public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
+import connections.*;
+
+public class SocketWriter extends AsyncTask<Void, Void, actors.MyTaxi> {
 	
   /*******************************************************************/
   /******************** * VARIABLE DECLARATIONS * ********************/
   /*******************************************************************/
   //PARAMETER GETTERS
-  private Context clientActivity;
+  private ClientMap clientMap;
   private LatLng srcLocation, destination;
   private ProgressDialog progressDialog;
 
   //DATA COMMUNICATION VARIABLES
-  private String SERVERIP = connections.MyConnection.serverIp; //server IP Address
-  private int PORT = connections.MyConnection.serverPort; //port number
+  private String SERVERIP; //server IP Address
+  private int PORT; //port number
   private Socket clientApp_Client;
   private ObjectInputStream clientApp_ClientInputSocket;
   private ObjectOutputStream clientApp_ClientOutputSocket;
@@ -35,10 +38,12 @@ public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
   /*******************************************************************/
   /************************* * CONSTRUCTOR * *************************/
   /*******************************************************************/
-  public ServerSpeakerThread(Context clientActivityContext, LatLng sourceCoordinates, LatLng destinationCoordinates) {
-    clientActivity = clientActivityContext;
+  public SocketWriter(ClientMap pClientMapView, LatLng sourceCoordinates, LatLng destinationCoordinates, MyConnection pConn){	
+    clientMap = pClientMapView;
     srcLocation = sourceCoordinates;
     destination = destinationCoordinates;
+    SERVERIP = pConn.getServerIp();
+    PORT = pConn.getServerPort();
  }
 
   
@@ -49,7 +54,7 @@ public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
     super.onPreExecute();	
     // makes a dialog animation upon starting the connection to show the
     // progress of the task
-    progressDialog = new ProgressDialog(clientActivity);
+    progressDialog = new ProgressDialog(clientMap);
     progressDialog.setMessage("Sending Request. Waiting for Server Reply");
     progressDialog.setIndeterminate(true); //progress bar is not loading by percentage
     progressDialog.show(); //required to show the progress bar
@@ -76,11 +81,11 @@ public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
 	  
 	  result = (actors.MyTaxi)clientApp_ClientInputSocket.readObject();
     }catch (UnknownHostException e) {
-	  Toast.makeText(clientActivity, "Error! Cannot identify the host connection", Toast.LENGTH_LONG).show();
+    	System.out.println("error: unknown host exception");
     }catch (IOException e) {
-      Toast.makeText(clientActivity, "Error! Cannot establish the connection", Toast.LENGTH_LONG).show();
+    	System.out.println("error: could not connect to server");
     } catch (ClassNotFoundException e) {
-        Toast.makeText(clientActivity, "Error! Class not found", Toast.LENGTH_LONG).show();
+    	System.out.println("error: class not found exception");
 	}
     return result;  
   }
@@ -89,9 +94,9 @@ public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
     
     closeClientConnection(); //close the connection to save power from running unused threads
     progressDialog.hide(); //hides the progress bar
-    Intent intent = new Intent(clientActivity, TaxiInfo.class); //notify the client to the the result of his/her request
+    Intent intent = new Intent(clientMap, RequestedTaxiData.class); //notify the client to the the result of his/her request
     intent.putExtra("server_msg", result);//insert the server message
-    clientActivity.startActivity(intent);
+    clientMap.startActivity(intent);
   }
   
   
@@ -109,7 +114,7 @@ public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
           try {
             clientApp_ClientOutputSocket.close();
           }catch (IOException e) {
-            Toast.makeText(clientActivity, "error occured while closing the output socket.", Toast.LENGTH_LONG).show();
+            Toast.makeText(clientMap, "error occured while closing the output socket.", Toast.LENGTH_LONG).show();
           }
         }
         //2. closing data inflow connection
@@ -117,14 +122,14 @@ public class ServerSpeakerThread extends AsyncTask<Void, Void, actors.MyTaxi> {
           try {
 		    clientApp_ClientInputSocket.close();
           }catch (IOException e) {
-            Toast.makeText(clientActivity, "error occured while closing the input socket.", Toast.LENGTH_LONG).show();
+            Toast.makeText(clientMap, "error occured while closing the input socket.", Toast.LENGTH_LONG).show();
           }          
 		}
         //3. close the main socket
     	clientApp_Client.close();    	  
     	return true;
       }catch (IOException e) {
-        Toast.makeText(clientActivity, "error occured while closing the socket.", Toast.LENGTH_LONG).show();
+        Toast.makeText(clientMap, "error occured while closing the socket.", Toast.LENGTH_LONG).show();
 	  }
     }
 

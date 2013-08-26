@@ -1,12 +1,11 @@
 package abanyu.transphone.client.view;
 
 import abanyu.transphone.client.R;
-import abanyu.transphone.client.R.id;
-import abanyu.transphone.client.R.layout;
-import actors.MyTaxi;
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
+
+import actors.MyTaxi;
 
 public class RequestedTaxiData extends Activity{
 	

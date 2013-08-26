@@ -14,9 +14,10 @@ import android.os.AsyncTask;
 import android.widget.Toast;
 import com.google.android.gms.maps.model.LatLng;
 
-import connections.*;
+import actors.*;
+import connections.MyConnection;
 
-public class SocketWriter extends AsyncTask<Void, Void, actors.MyTaxi> {
+public class SocketWriter extends AsyncTask<Void, Void, MyTaxi> {
 	
   /*******************************************************************/
   /******************** * VARIABLE DECLARATIONS * ********************/
@@ -33,7 +34,7 @@ public class SocketWriter extends AsyncTask<Void, Void, actors.MyTaxi> {
   private ObjectInputStream clientApp_ClientInputSocket;
   private ObjectOutputStream clientApp_ClientOutputSocket;
 
-  private actors.MyPassenger clientPass;
+  private MyPassenger clientPass;
   
   /*******************************************************************/
   /************************* * CONSTRUCTOR * *************************/
@@ -60,14 +61,14 @@ public class SocketWriter extends AsyncTask<Void, Void, actors.MyTaxi> {
     progressDialog.show(); //required to show the progress bar
 
     //creates a passenger object based on the properties exist on this cless
-    clientPass = new actors.MyPassenger( srcLocation.latitude,srcLocation.longitude, 
+    clientPass = new MyPassenger( srcLocation.latitude,srcLocation.longitude, 
       				                     destination.latitude,destination.latitude, 
       				                     "Stanley" );
   }
 
   @Override
-  protected actors.MyTaxi doInBackground(Void... params) {
-	  actors.MyTaxi result = null;
+  protected MyTaxi doInBackground(Void... params) {
+	  MyTaxi result = null;
 	//creates a connection to the server to send the request
 	
     try {
@@ -79,7 +80,7 @@ public class SocketWriter extends AsyncTask<Void, Void, actors.MyTaxi> {
 	  clientApp_ClientOutputSocket.writeObject(clientPass);
 	  clientApp_ClientOutputSocket.flush(); //REQUIRED to successfuly write the object to the socket
 	  
-	  result = (actors.MyTaxi)clientApp_ClientInputSocket.readObject();
+	  result = (MyTaxi)clientApp_ClientInputSocket.readObject();
     }catch (UnknownHostException e) {
     	System.out.println("error: unknown host exception");
     }catch (IOException e) {
@@ -89,7 +90,7 @@ public class SocketWriter extends AsyncTask<Void, Void, actors.MyTaxi> {
 	}
     return result;  
   }
-  protected void onPostExecute(actors.MyTaxi result) {
+  protected void onPostExecute(MyTaxi result) {
     super.onPostExecute(result); 
     
     closeClientConnection(); //close the connection to save power from running unused threads

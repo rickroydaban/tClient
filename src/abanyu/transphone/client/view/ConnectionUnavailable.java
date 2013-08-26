@@ -1,17 +1,12 @@
 package abanyu.transphone.client.view;
 
 import abanyu.transphone.client.R;
-import abanyu.transphone.client.R.id;
-import abanyu.transphone.client.R.layout;
 import abanyu.transphone.client.model.Internet;
 import android.app.Activity;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.Window;
 import android.widget.Button;
 
 

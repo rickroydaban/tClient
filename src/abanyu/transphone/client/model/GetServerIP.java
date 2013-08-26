@@ -3,31 +3,19 @@ package abanyu.transphone.client.model;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import connections.MyConnection;
-import data.TaxiStatus;
-
 import abanyu.transphone.client.view.ClientMap;
-import actors.MyTaxi;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.AdapterView.OnItemClickListener;
+
+import connections.MyConnection;
 
 public class GetServerIP extends AsyncTask<Void, Void, String>{
   //parameters for onPreExecute, doInBackground, onPostExecute respectively

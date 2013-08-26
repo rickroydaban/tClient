@@ -12,7 +12,6 @@
 
 package abanyu.transphone.client.view;
 
-import connections.MyConnection;
 import abanyu.transphone.client.R;
 import abanyu.transphone.client.controller.MapController;
 import abanyu.transphone.client.model.GetServerIP;
@@ -22,6 +21,8 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.widget.Button;
 import android.widget.ImageView;
+
+import connections.MyConnection;
 
 public class ClientMap extends FragmentActivity{
   // needs to extend fragment activity since fragments are needed in order to display map contents

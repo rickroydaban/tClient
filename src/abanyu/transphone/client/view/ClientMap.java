@@ -12,10 +12,8 @@
 
 package abanyu.transphone.client.view;
 
-import connections.MyConnection;
 import abanyu.transphone.client.R;
 import abanyu.transphone.client.controller.MapController;
-import abanyu.transphone.client.model.GetServerIP;
 import abanyu.transphone.client.model.Map;
 import abanyu.transphone.client.model.Position;
 import android.os.Bundle;
@@ -23,30 +21,31 @@ import android.support.v4.app.FragmentActivity;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import connections.MyConnection;
+
 public class ClientMap extends FragmentActivity{
   // needs to extend fragment activity since fragments are needed in order to display map contents
-
-  Position position;
-  Map map;
   
-  MapController mapController;
-  ImageView providerIconContainer;  
-  MyConnection conn;
+  private Map map;
+  private Position position;
+  private MyConnection conn;
+  private MapController mapController;
+  private ImageView providerIconContainer;
+  
+  public Button contactTaxiButton, exitButton, taxiInfoButton, disconnectButton;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.client_map);
     
+    conn = new MyConnection();
     position = new Position(this);
     map = new Map(this);
-    
-	conn = new MyConnection();
-	new GetServerIP(this, "http://transphone.freetzi.com/thesis/dbmanager.php?fname=getServerIP", conn).execute();
     mapController = new MapController(this, position, map, conn);
+
     //icon that will be shown to indicate the currently used location provider
     providerIconContainer = (ImageView)findViewById(R.id.provImg); //gps or network
-
     //manage displaying of icons
     if(position.providerIsGPS()){	
 	    providerIconContainer.setImageResource(R.drawable.gps);
@@ -55,11 +54,18 @@ public class ClientMap extends FragmentActivity{
     }      
 	
 	//manage confirm button click
-	Button confirmButton = (Button) findViewById(R.id.confirmButton);
-	mapController.addConfirmButtonClickListener(confirmButton);
+	contactTaxiButton = (Button) findViewById(R.id.contactTaxiButton);
+	mapController.addContactTaxiButtonClickListener(contactTaxiButton);
 	//manage exit button click
-	Button exitButton = (Button) findViewById(R.id.exitButton);
+	exitButton = (Button) findViewById(R.id.exitButton);
 	mapController.addExitButtonClickListener(exitButton);
-  }      
+	//manage taxi information button click
+	taxiInfoButton = (Button) findViewById(R.id.taxiInfoButton);
+	mapController.addTaxiInfoButtonClickListener(taxiInfoButton);
+	taxiInfoButton.setVisibility(Button.INVISIBLE);
+	//manage disconnect button click
+	disconnectButton = (Button) findViewById(R.id.disconnectButton);
+	mapController.addDisconnectButtonClickListener(disconnectButton);
+	disconnectButton.setVisibility(Button.INVISIBLE);
+  }
 }
-

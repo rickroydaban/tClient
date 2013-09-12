@@ -74,7 +74,7 @@ public class Position {
     return false;
   }
   
-  public void setCurrentLocation(double pLat, double pLng){
+  /*public void setCurrentLocation(double pLat, double pLng){
 	  srcCoords = new LatLng(pLat, pLng);
   }
   
@@ -88,5 +88,5 @@ public class Position {
   
   public LatLng getDestinationLocation(){
 	  return new LatLng(desCoords.latitude, desCoords.longitude);
-  }
+  }*/
 }

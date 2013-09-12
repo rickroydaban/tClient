@@ -1,4 +1,4 @@
-package abanyu.transphone.client.model;
+package abanyu.transphone.client.controller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,36 +7,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import abanyu.transphone.client.view.ClientMap;
+import abanyu.transphone.client.model.JSONParser;
+import abanyu.transphone.client.model.Map;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
 
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 public class RouteDrawer extends AsyncTask<Void, Void, String> {
 	//parameters for onPreExecute, doInBackground, onPostExecute respectively
-	
-	private ClientMap clientMap;
+
+	private Map map;
 	private String url;
 	private ProgressDialog progressDialog;
-	private Map map;
 	
-	public RouteDrawer(ClientMap pClientMap, Map pMap, String stringUrl){
-		clientMap = pClientMap;
+	public RouteDrawer(Map pMap, String stringUrl, ProgressDialog pProgressDialog){
 		map = pMap;
-		url = stringUrl; //this url is created by the makeUrl() function
+		url = stringUrl;
+		progressDialog = pProgressDialog;
 	}
-	
-	protected void onPreExecute() {
-		super.onPreExecute();
-		progressDialog = new ProgressDialog(clientMap);
-		progressDialog.setMessage("Tracing route between markers, please wait...");
-		progressDialog.setIndeterminate(true);
-		progressDialog.show();
-	}
-	
+
 	@Override
 	protected String doInBackground(Void... arg0) {
 		JSONParser jParser = new JSONParser();
@@ -46,10 +39,12 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 	
 	protected void onPostExecute(String jsonizedStringUrlResult) {
 		super.onPostExecute(jsonizedStringUrlResult);
-		progressDialog.hide();
 		
 		if(jsonizedStringUrlResult != null)
 			drawPath(jsonizedStringUrlResult);
+		
+		if(progressDialog != null)
+			progressDialog.hide();
 	}		
 	
 	private void drawPath(String jsonizedStringUrl) {

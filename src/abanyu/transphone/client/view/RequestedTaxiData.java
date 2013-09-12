@@ -1,23 +1,26 @@
 package abanyu.transphone.client.view;
 
 import abanyu.transphone.client.R;
-import abanyu.transphone.client.R.id;
-import abanyu.transphone.client.R.layout;
-import actors.MyTaxi;
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.TextView;
+
+import actors.MyTaxi;
 
 public class RequestedTaxiData extends Activity{
 	
 	private TextView plateno, bodyno, compname, taxidesc, drivername, compno;
+	private Button back;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.taxi_info);
 		
-		MyTaxi taxiData = (MyTaxi) getIntent().getSerializableExtra("server_msg");
+		MyTaxi taxiData = (MyTaxi) getIntent().getSerializableExtra("Taxi Info");
 		
 		plateno = (TextView) findViewById(R.id.plateno);
 		plateno.append(taxiData.getPlateNumber());
@@ -36,5 +39,14 @@ public class RequestedTaxiData extends Activity{
 		
 		drivername = (TextView) findViewById(R.id.drivername);
 		drivername.append(taxiData.getDriverName());
+		
+		back = (Button) findViewById(R.id.backButton);
+		back.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				finish();
+			}
+		});
 	}
 }

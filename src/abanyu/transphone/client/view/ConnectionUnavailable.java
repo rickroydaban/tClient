@@ -1,19 +1,13 @@
 package abanyu.transphone.client.view;
 
 import abanyu.transphone.client.R;
-import abanyu.transphone.client.R.id;
-import abanyu.transphone.client.R.layout;
 import abanyu.transphone.client.model.Internet;
 import android.app.Activity;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.Window;
 import android.widget.Button;
-
 
 /*
  * this class will check if there is a wireless connection within this devices
@@ -26,8 +20,9 @@ public class ConnectionUnavailable extends Activity {
     Internet internet = new Internet(this);
     
     if(internet.hasInternetConnection()){
-      Intent i = new Intent(this,ClientMap.class);
-      startActivity(i);
+      Intent intent = new Intent(this,ClientMap.class);
+      startActivity(intent);
+      finish();
     }else{
       setContentView(R.layout.enablewifi);
 

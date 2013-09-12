@@ -1,138 +1,107 @@
 package abanyu.transphone.client.model;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.List;
 
-import abanyu.transphone.client.view.ClientMap;
-import abanyu.transphone.client.view.RequestedTaxiData;
-import android.app.ProgressDialog;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.widget.Toast;
-import com.google.android.gms.maps.model.LatLng;
+import org.apache.http.conn.util.InetAddressUtils;
 
-import connections.*;
+import abanyu.transphone.client.controller.MapController;
+import android.os.Handler;
+import android.os.Looper;
+import connections.MyConnection;
 
-public class SocketWriter extends AsyncTask<Void, Void, actors.MyTaxi> {
-	
-  /*******************************************************************/
-  /******************** * VARIABLE DECLARATIONS * ********************/
-  /*******************************************************************/
-  //PARAMETER GETTERS
-  private ClientMap clientMap;
-  private LatLng srcLocation, destination;
-  private ProgressDialog progressDialog;
+public class SocketWriter implements Runnable{
 
-  //DATA COMMUNICATION VARIABLES
-  private String SERVERIP; //server IP Address
-  private int PORT; //port number
-  private Socket clientApp_Client;
-  private ObjectInputStream clientApp_ClientInputSocket;
-  private ObjectOutputStream clientApp_ClientOutputSocket;
-
-  private actors.MyPassenger clientPass;
-  
-  /*******************************************************************/
-  /************************* * CONSTRUCTOR * *************************/
-  /*******************************************************************/
-  public SocketWriter(ClientMap pClientMapView, LatLng sourceCoordinates, LatLng destinationCoordinates, MyConnection pConn){	
-    clientMap = pClientMapView;
-    srcLocation = sourceCoordinates;
-    destination = destinationCoordinates;
-    SERVERIP = pConn.getServerIp();
-    PORT = pConn.getServerPort();
- }
-
-  
-  /*******************************************************************/
-  /************************** * ASYNCTASK * **************************/
-  /*******************************************************************/
-  protected void onPreExecute() {
-    super.onPreExecute();	
-    // makes a dialog animation upon starting the connection to show the
-    // progress of the task
-    progressDialog = new ProgressDialog(clientMap);
-    progressDialog.setMessage("Sending Request. Waiting for Server Reply");
-    progressDialog.setIndeterminate(true); //progress bar is not loading by percentage
-    progressDialog.show(); //required to show the progress bar
-
-    //creates a passenger object based on the properties exist on this cless
-    clientPass = new actors.MyPassenger( srcLocation.latitude,srcLocation.longitude, 
-      				                     destination.latitude,destination.latitude, 
-      				                     "Stanley" );
-  }
-
-  @Override
-  protected actors.MyTaxi doInBackground(Void... params) {
-	  actors.MyTaxi result = null;
-	//creates a connection to the server to send the request
-	
-    try {
-	  clientApp_Client = new Socket(SERVERIP, PORT);
-	        
-	  clientApp_ClientOutputSocket = new ObjectOutputStream(clientApp_Client.getOutputStream()); // outflow data handler object
-	  clientApp_ClientInputSocket = new ObjectInputStream(clientApp_Client.getInputStream()); // inflow of data handler object
-	  //writes the object to the socket      
-	  clientApp_ClientOutputSocket.writeObject(clientPass);
-	  clientApp_ClientOutputSocket.flush(); //REQUIRED to successfuly write the object to the socket
+	//DATA COMMUNICATION VARIABLES
+	private MyConnection conn;
+	private Socket passengerSocket;
+	private ObjectOutputStream passengerOutputStream;
 	  
-	  result = (actors.MyTaxi)clientApp_ClientInputSocket.readObject();
-    }catch (UnknownHostException e) {
-    	System.out.println("error: unknown host exception");
-    }catch (IOException e) {
-    	System.out.println("error: could not connect to server");
-    } catch (ClassNotFoundException e) {
-    	System.out.println("error: class not found exception");
-	}
-    return result;  
-  }
-  protected void onPostExecute(actors.MyTaxi result) {
-    super.onPostExecute(result); 
-    
-    closeClientConnection(); //close the connection to save power from running unused threads
-    progressDialog.hide(); //hides the progress bar
-    Intent intent = new Intent(clientMap, RequestedTaxiData.class); //notify the client to the the result of his/her request
-    intent.putExtra("server_msg", result);//insert the server message
-    clientMap.startActivity(intent);
+	//LOCAL VARIABLES
+	private String recipient;
+	private MapController mapController;
+	
+  public SocketWriter(MapController pMapController, MyConnection pConn, String pRecipient){	
+	mapController = pMapController;
+	conn = pConn;
+	recipient = pRecipient;
   }
   
+  @Override
+  public void run() {
+	  try{
+	    passengerSocket = new Socket(conn.getServerIp(), conn.getServerPort());
+		mapController.myPassenger.setIp(getIPAddress());
+	    passengerOutputStream = new ObjectOutputStream(passengerSocket.getOutputStream()); // outflow data handler object
+		passengerOutputStream.writeObject(mapController.myPassenger);
+		passengerOutputStream.flush(); //REQUIRED to successfuly write the object to the socket
+		  
+		if(recipient.equals("Taxi"))
+	    {
+	      passengerSocket = new Socket(mapController.myTaxi.getIP(), conn.getTaxiPort());
+	      mapController.myPassenger.setIp("");
+	      passengerOutputStream = new ObjectOutputStream(passengerSocket.getOutputStream());
+	  	  passengerOutputStream.writeObject(mapController.myPassenger);
+	  	  passengerOutputStream.flush();
+	  	  
+	  	Handler handler = new Handler(Looper.getMainLooper());
+		  handler.post(new Runnable() {				
+		    @Override
+			public void run() {
+		    	mapController.disconnect();
+			}
+		  });
+	    }
+	  } catch (UnknownHostException e) {
+	      System.out.println("error: unknown host exception");
+	  } catch (IOException e) {
+	      System.out.println("error: could not connect to server");
+	  } finally{
+	      closeConnection();
+	    }
+      }
   
-  /*******************************************************************/
-  /************************ * LOCAL METHODS * ************************/
-  /*******************************************************************/
-
-  public boolean closeClientConnection() {
-    progressDialog.setMessage("Server reply has been recieved successfully. Closing connection...");
-
-    if (clientApp_Client != null) {
-      try {
-    	//1. closing data outflow connection
-        if(clientApp_ClientOutputSocket != null) {
-          try {
-            clientApp_ClientOutputSocket.close();
-          }catch (IOException e) {
-            Toast.makeText(clientMap, "error occured while closing the output socket.", Toast.LENGTH_LONG).show();
+  private String getIPAddress() {
+      try 
+      {
+          List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+          
+          for (NetworkInterface intf : interfaces) 
+          {
+              List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
+          
+              for (InetAddress addr : addrs) 
+              {
+                  if (!addr.isLoopbackAddress()) 
+                  {
+                      String sAddr = addr.getHostAddress().toUpperCase();
+                      boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr); 
+                      
+                      if (isIPv4) 
+                      	return sAddr;
+                  }
+              }
           }
-        }
-        //2. closing data inflow connection
-        if (clientApp_ClientInputSocket != null) {
-          try {
-		    clientApp_ClientInputSocket.close();
-          }catch (IOException e) {
-            Toast.makeText(clientMap, "error occured while closing the input socket.", Toast.LENGTH_LONG).show();
-          }          
-		}
-        //3. close the main socket
-    	clientApp_Client.close();    	  
-    	return true;
-      }catch (IOException e) {
-        Toast.makeText(clientMap, "error occured while closing the socket.", Toast.LENGTH_LONG).show();
-	  }
-    }
-
-	return false;
+      } catch (Exception e) { 
+      	e.printStackTrace();
+      } 
+      return null;
+  }
+  
+  private void closeConnection() {
+    try {
+      if(passengerOutputStream != null)
+	    passengerOutputStream.close();
+      if(passengerSocket != null)
+		passengerSocket.close();
+    } catch (IOException e) {
+	    e.printStackTrace();
+	}
   }
 }

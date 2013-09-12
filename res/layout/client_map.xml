@@ -10,36 +10,13 @@
     android:layout_height="match_parent"
     class="com.google.android.gms.maps.SupportMapFragment" />
     
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="95sp"
-        android:orientation="horizontal"
-        android:layout_alignParentBottom="true" >
-
-    <Button
-        android:id="@+id/confirmButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="160sp"
-        android:text="Confirm" />
-
-    <Button
-        android:id="@+id/exitButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="160sp"
-        android:text="Exit" />
-
-
-    </LinearLayout>
-
-
 	<LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="30sp"
-        android:orientation="horizontal"
-        android:layout_alignParentTop="true"
-        android:background="#EFEFEF">
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:background="#EFEFEF"
+	    android:orientation="horizontal"
+	    android:padding="5dp" >
     
 		<ImageView 
 	        android:id="@+id/provImg"
@@ -48,7 +25,45 @@
         	android:padding="5dp"
         	android:src="@drawable/na"
         	android:textAllCaps="true"/>
-        
+		
+		<RelativeLayout 
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content">
+		    
+			<Button
+        		android:id="@+id/contactTaxiButton"
+        		android:layout_width="wrap_content"
+        		android:layout_height="wrap_content"
+        		android:width="140dp"
+        		android:text="Contact Taxi" />
+			
+			<Button
+        		android:id="@+id/taxiInfoButton"
+        		android:layout_width="wrap_content"
+        		android:layout_height="wrap_content"
+        		android:width="140dp"
+        		android:text="Taxi Info" />
+    	
+        </RelativeLayout>
+		
+		<RelativeLayout 
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content">
+			
+			<Button
+		    	android:id="@+id/exitButton"
+		    	android:layout_width="wrap_content"
+		    	android:layout_height="wrap_content"
+		    	android:width="140dp"
+		    	android:text="Exit" />
+			
+			<Button
+		    	android:id="@+id/disconnectButton"
+		    	android:layout_width="wrap_content"
+		    	android:layout_height="wrap_content"
+		    	android:width="140dp"
+		    	android:text="Disconnect" />
+			
+		</RelativeLayout>
     </LinearLayout>
-    
 </RelativeLayout>

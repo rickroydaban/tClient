@@ -22,6 +22,12 @@ public class RequestedTaxiData extends Activity{
 		
 		MyTaxi taxiData = (MyTaxi) getIntent().getSerializableExtra("Taxi Info");
 		
+		System.out.println("Plate No: "+taxiData.getPlateNumber());
+		System.out.println("Body No:"+taxiData.getBodyNumber());
+		System.out.println("Desc: "+taxiData.getDescription());
+		System.out.println("Company: "+taxiData.getCompanyName());
+		System.out.println("Driver: "+taxiData.getDriverName());
+		
 		plateno = (TextView) findViewById(R.id.plateno);
 		plateno.append(taxiData.getPlateNumber());
 		

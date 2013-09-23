@@ -7,13 +7,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import abanyu.transphone.client.model.JSONParser;
 import abanyu.transphone.client.model.Map;
-import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.AsyncTask;
 
-import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -22,12 +19,12 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 
 	private Map map;
 	private String url;
-	private ProgressDialog progressDialog;
+	private MapController mc;
 	
-	public RouteDrawer(Map pMap, String stringUrl, ProgressDialog pProgressDialog){
+	public RouteDrawer(Map pMap, String stringUrl, MapController mapController){
 		map = pMap;
 		url = stringUrl;
-		progressDialog = pProgressDialog;
+		mc = mapController;
 	}
 
 	@Override
@@ -42,9 +39,7 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 		
 		if(jsonizedStringUrlResult != null)
 			drawPath(jsonizedStringUrlResult);
-		
-		if(progressDialog != null)
-			progressDialog.hide();
+				
 	}		
 	
 	private void drawPath(String jsonizedStringUrl) {
@@ -63,6 +58,7 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 				.width(2).color(Color.BLUE).geodesic(true)));
 			}
 			
+			mc.getProgressDialog().hide();
 		} catch (JSONException e) {
 			e.printStackTrace();
 	    }

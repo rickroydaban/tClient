@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:background="#770101"
+	android:gravity="center" >
+  	
+		<TextView 
+			android:id="@+id/errorCause"
+			android:padding="10dp"
+			android:textSize="15sp"
+			android:textStyle="bold"
+			android:textColor="#FF0000"
+			android:gravity="center_horizontal"
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent" />
+    				
+		<ImageButton 
+			android:id="@+id/reloadButton"
+			android:layout_width="100dp"
+			android:layout_height="100dp"
+			android:background="@drawable/restart"
+			android:layout_centerHorizontal="true"
+			android:layout_marginTop="5dp"
+			android:contentDescription="reload button"
+			android:layout_below="@id/errorCause" />        
+
+</RelativeLayout>

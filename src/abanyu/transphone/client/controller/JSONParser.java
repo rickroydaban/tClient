@@ -1,4 +1,4 @@
-package abanyu.transphone.client.model;
+package abanyu.transphone.client.controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;

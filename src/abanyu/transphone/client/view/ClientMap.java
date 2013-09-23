@@ -14,58 +14,66 @@ package abanyu.transphone.client.view;
 
 import abanyu.transphone.client.R;
 import abanyu.transphone.client.controller.MapController;
-import abanyu.transphone.client.model.Map;
-import abanyu.transphone.client.model.Position;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.widget.Button;
 import android.widget.ImageView;
 
-import connections.MyConnection;
-
 public class ClientMap extends FragmentActivity{
   // needs to extend fragment activity since fragments are needed in order to display map contents
   
-  private Map map;
-  private Position position;
-  private MyConnection conn;
-  private MapController mapController;
   private ImageView providerIconContainer;
-  
-  public Button contactTaxiButton, exitButton, taxiInfoButton, disconnectButton;
+  private Button contactTaxiButton, exitButton, taxiInfoButton, disconnectButton;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.client_map);
-    
-    conn = new MyConnection();
-    position = new Position(this);
-    map = new Map(this);
-    mapController = new MapController(this, position, map, conn);
 
+    System.out.println("Taxi Log: Starting the system..");
+    providerIconContainer = (ImageView) findViewById(R.id.provImg); //gps or network
+    //manage confirm button click
+    contactTaxiButton = (Button)findViewById(R.id.contactTaxiButton);
+    //manage exit button click
+    exitButton = (Button)findViewById(R.id.exitButton);
+    //manage taxi information button click
+    taxiInfoButton = (Button)findViewById(R.id.taxiInfoButton);
+    //manage disconnect button click
+    disconnectButton = (Button)findViewById(R.id.disconnectButton);
+      
     //icon that will be shown to indicate the currently used location provider
     providerIconContainer = (ImageView)findViewById(R.id.provImg); //gps or network
     //manage displaying of icons
-    if(position.providerIsGPS()){	
-	    providerIconContainer.setImageResource(R.drawable.gps);
-    }else if(position.providerIsNetwork()){
-	    providerIconContainer.setImageResource(R.drawable.network);
-    }      
-	
-	//manage confirm button click
-	contactTaxiButton = (Button) findViewById(R.id.contactTaxiButton);
-	mapController.addContactTaxiButtonClickListener(contactTaxiButton);
-	//manage exit button click
-	exitButton = (Button) findViewById(R.id.exitButton);
-	mapController.addExitButtonClickListener(exitButton);
-	//manage taxi information button click
-	taxiInfoButton = (Button) findViewById(R.id.taxiInfoButton);
-	mapController.addTaxiInfoButtonClickListener(taxiInfoButton);
-	taxiInfoButton.setVisibility(Button.INVISIBLE);
-	//manage disconnect button click
-	disconnectButton = (Button) findViewById(R.id.disconnectButton);
-	mapController.addDisconnectButtonClickListener(disconnectButton);
-	disconnectButton.setVisibility(Button.INVISIBLE);
+	  
+    System.out.println("Taxi Log: Map View has been initialized! Starting Map Controller...");
+    System.out.println("Taxi Log: =");
+    System.out.println("Taxi Log: =");
+        
+    new MapController(this);
+  }
+  
+  public ImageView getProviderIcon(){
+    System.out.println("Taxi Log: returning an instance of the provider icon imageview");
+  	return providerIconContainer;
+  }
+  
+  public Button getContactButton(){
+    System.out.println("Taxi Log: returning an instance of the contact button");
+  	return contactTaxiButton;
+  }
+  
+  public Button getExitButton(){
+    System.out.println("Taxi Log: returning an instance of the exit button");
+  	return exitButton;
+  }
+  
+  public Button getInfoButton(){
+    System.out.println("Taxi Log: returning an instance of the taxi info button");
+  	return taxiInfoButton;
+  }
+  
+  public Button getDisconnectButton(){
+    System.out.println("Taxi Log: returning an instance of the disconnect button");
+  	return disconnectButton;
   }
 }

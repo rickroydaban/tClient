@@ -21,6 +21,7 @@ public class Map {
 	  public Map(ClientMap pClientMapActivity){
 		  clientMapActivity=pClientMapActivity;
 		  map = ((SupportMapFragment) clientMapActivity.getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
+
 	  }
 	  
 	  public GoogleMap getMap(){

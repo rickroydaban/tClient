@@ -6,9 +6,19 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import abanyu.transphone.client.R;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 import connections.MyConnection;
 
 public class NearestTaxiGetter implements Runnable{
@@ -24,6 +34,11 @@ public class NearestTaxiGetter implements Runnable{
   String json;
   String result;
   Handler handler;
+	private JSONArray taxis;
+	private JSONObject jo;
+	private String plateNo;
+	private String servrIP;
+	private int eta;
 	
   //CONSTRUCTOR	
   public NearestTaxiGetter(MyConnection pConn, MapController pMapController){    
@@ -42,25 +57,6 @@ public class NearestTaxiGetter implements Runnable{
     System.out.println("Taxi Log: =");
   }
 		
-  public NearestTaxiGetter(MyConnection pConn, MapController pMapController, String plateNo){    
-    //dynamically calculates the nearest taxi to the passenger through php scripting
-    conn = pConn;
-    mapController = pMapController;
-
-    url = new StringBuilder(conn.getDBUrl()+"/thesis/dbmanager.php?fname=getNearestTaxiServerIP").
-    											append("&arg1=").
-    											append(pMapController.getPassenger().getCurLat()).
-    											append("&arg2=").
-    											append(pMapController.getPassenger().getCurLng()).
-    											append("&arg3=").
-    											append(plateNo).
-    											toString();
-    
-    System.out.println("Taxi Log: =");
-    System.out.println("Taxi Log: NearestTaxiGetter Constructor finished with url: "+url);
-    System.out.println("Taxi Log: =");
-  }
-
 	@Override
 	public void run() {
     handler = new Handler(Looper.getMainLooper());
@@ -95,21 +91,41 @@ public class NearestTaxiGetter implements Runnable{
 	  });
 
 	  if(!result.equals("0")){
-    	String [] results = result.split(";");
+			try {
+				taxis = new JSONArray(result);
+
+				handler = new Handler(Looper.getMainLooper());
+	  	  handler.post(new Runnable() {				
+	  	  	@Override
+	  	  	public void run() {
+	  	    	mapController.makeToast("Retrieved "+taxis.length()+" Available Taxi.");
+	  	  	}
+	  	  });
 	  	
-    	System.out.println("Taxi Log: Setting the server ip: "+results[0]+" at port: "+conn.getServerPort());
-    	conn.setServerIp(results[0]);
-    	System.out.println("Taxi Log: Setting the system taxi to retrieved nearest Taxi from online DB: "+results[1]);
-    	mapController.getPassenger().setRequestedTaxi(results[1]);
-    	
-    	new Thread(new SocketWriter(mapController, conn, false)).start(); //sends a request to the server    	
+	  	  mapController.setHasTaxiRequest(true);
+	  	  mapController.setRetrievedTaxiCount(taxis.length());
+	  	  
+	  	  //update the taxi list in the map controller
+				for (int i = 0; i < mapController.getRetrievedTaxiCount(); i++) {
+					jo = taxis.getJSONObject(i);
+					plateNo = jo.getString("plateNo");
+					servrIP = jo.getString("servrIP");
+					eta = jo.getInt("eta");
+					
+					mapController.getTaxiList().add(plateNo+";"+servrIP+";"+eta);
+				}
+				
+				mapController.intitiateRequest(mapController.getTaxiList().get(mapController.getTaxiIndex()).split(";"));				
+			} catch (JSONException e) {
+				System.out.println("Taxi Info: JSON Exception at NearestTaxiGetter: "+e.getMessage());
+			}	  	
     }else{
     	System.out.println("Taxi Log: DB returns 0 result. No Taxi is available as of the moment");
       handler = new Handler(Looper.getMainLooper());
   	  handler.post(new Runnable() {				
   	  	@Override
   	  	public void run() {
-  	    	mapController.makeToast("Sorry. No taxi is available as of the moment.");
+  	    	mapController.makeToast("No Available Taxi Found.");
   	    	mapController.cancelRequest();
   	  	}
   	  });

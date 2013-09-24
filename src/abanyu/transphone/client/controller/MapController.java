@@ -2,6 +2,7 @@ package abanyu.transphone.client.controller;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +28,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -46,11 +48,19 @@ public class MapController implements LocationListener, OnClickListener {
 	private MyConnection conn;
 	private ClientMap clientMap;
 	private AlertDialog alertDialog;
-	private boolean isPassengerServerRunning;
 	private ProgressDialog progressDialog;
 	private EditText nameField;
+	private List<String> taxiList;
+	private int taxiIndex, taxiETA, retrievedTaxiCnt;
+	public String expectedReply, serverReply;
+	private boolean hasTaxiRequest, isWaitingForServerReply;
 	
 	public MapController(ClientMap pClientMap){
+		taxiList = new ArrayList<String>();
+		taxiIndex = 0;
+		hasTaxiRequest = false;
+		isWaitingForServerReply = false;
+		
     System.out.println("Taxi Log: Initializing map controller. Map controller constructor in progress..");
 		clientMap = pClientMap;
     mapController = this;
@@ -94,7 +104,6 @@ public class MapController implements LocationListener, OnClickListener {
 			addMapClickListener();
 			
 	    System.out.println("Taxi Log: Start Reading for Server replies...");			
-		  new SocketReader(clientMap, mapController, conn).execute();		
 		}else{
 			System.out.println("Taxi Log: WARNING. Map is null");
 		}
@@ -102,6 +111,67 @@ public class MapController implements LocationListener, OnClickListener {
     System.out.println("Taxi Log: =");		
     System.out.println("Taxi Log: MapController Constructor process finished!");
     System.out.println("Taxi Log: =");
+	  new SocketReader(clientMap, mapController, conn).execute();		
+	}
+
+	public boolean hasTaxiRequest(){
+		return hasTaxiRequest;
+	}
+	
+	
+	public ClientMap getControllerView(){
+		return clientMap;
+	}
+	
+	public void checkIfSent(String pExpectedServerReply){
+		isWaitingForServerReply = true;
+		expectedReply = pExpectedServerReply;
+	}
+	
+	public boolean isRequestSent(){
+		return true;
+	}
+	
+	public void intitiateRequest(String [] dbTaxi){
+		conn.setServerIp(dbTaxi[1]);//server IP
+		mapController.getPassenger().setRequestedTaxi(dbTaxi[0]); //plate number
+		mapController.setTaxiEta(Integer.parseInt(dbTaxi[2])); //estimated time of arrival
+
+		//make dialog box
+		LayoutInflater li = LayoutInflater.from(mapController.getControllerView());
+		View promptView = li.inflate(R.layout.confirmrequest, null);		
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mapController.getControllerView());
+		alertDialogBuilder.setView(promptView);
+		
+		TextView tv = (TextView)promptView.findViewById(R.id.statementField);
+		tv.setText("Estimated Time of Arrival for "+dbTaxi[0]+" is "+dbTaxi[2]+" seconds");
+		
+		//Set dialog message
+		alertDialogBuilder.setCancelable(false).
+				setPositiveButton("Send Request", new DialogInterface.OnClickListener() {		
+					@Override
+					public void onClick(DialogInterface dialog, int which) {						
+						new Thread(new SocketWriter(mapController, conn, false)).start();
+					}
+				});
+		
+				alertDialogBuilder.setCancelable(false).setNegativeButton("Cancel Request", new DialogInterface.OnClickListener() {		
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+					  alertDialog.dismiss();
+					}
+				});
+		
+		alertDialog = alertDialogBuilder.create();
+		alertDialog.show();
+	}
+	
+	public void incrementTaxiIndex(){
+		taxiIndex++;
+	}
+	
+	public void setHasTaxiRequest(boolean bool){
+		hasTaxiRequest = bool;
 	}
 	
 	public void focusCurrentPosition(){
@@ -110,6 +180,26 @@ public class MapController implements LocationListener, OnClickListener {
 															 position.getLocationUpdateByTime(), 
 															 position.getLocationUpdateByDistance(), 
 															 this);		
+	}
+	
+	public void setRetrievedTaxiCount(int count){
+		retrievedTaxiCnt = count;
+	}
+	
+	public int getRetrievedTaxiCount(){
+		return retrievedTaxiCnt;
+	}
+	
+	public void setTaxiEta(int eta){
+		taxiETA = eta;
+	}
+	
+	public List<String> getTaxiList(){
+		return taxiList;
+	}
+	
+	public int getTaxiIndex(){
+		return taxiIndex;
 	}
 	
 	@Override
@@ -176,7 +266,7 @@ public class MapController implements LocationListener, OnClickListener {
 		System.out.println("Taxi Log: Updating Route...");		
 		String url = makeJsonCompatibleUrlStr(currentCoordinates.latitude, currentCoordinates.longitude, 
 											  targetCoordinates.latitude, targetCoordinates.longitude);
-		new RouteDrawer(map, url, mapController).execute();
+		new Thread(new RouteDrawer(map, url, mapController)).start();
 		
 		if(myTaxi.getStatus()==TaxiStatus.occupied)
 			map.animateCamera(CameraUpdateFactory.newLatLngZoom(targetCoordinates, 16), 2000);
@@ -235,22 +325,6 @@ public class MapController implements LocationListener, OnClickListener {
 			makeDialog(false, R.layout.confirmdisconnect,clientMap.getDisconnectButton());
 		}
 	}	
-
-	public void makeNewRequest(boolean registerTaxi){
-		String str;
-		if(registerTaxi)
-			str = " for updating purposes ";
-		else
-			str = " for disconnection purposes ";
-		
-    if(myTaxi!=null){
-			System.out.println("Taxi Log: Making new Request that escapes taxi: "+myTaxi.getPlateNumber()+" on the search."+str);
-			new Thread(new NearestTaxiGetter(conn, mapController,  myTaxi.getPlateNumber())).start(); //get the nearest taxi from the database
-    }else{
-			System.out.println("Taxi Log: Making new Request..."+str);
-			new Thread(new NearestTaxiGetter(conn, mapController)).start(); //get the nearest taxi from the database
-    }
-	}
 	
 	public void makeDialog(final boolean requiresInput, int layoutID, final Button triggerButton){
 		//Get prompt_name.xml view
@@ -273,7 +347,7 @@ public class MapController implements LocationListener, OnClickListener {
 							myPassenger.setPassengerName(nameField.getText().toString());
 					  
 							if(triggerButton == clientMap.getContactButton())								
-								makeNewRequest(false); //sends a new taxi request to the server
+								new Thread(new NearestTaxiGetter(conn, mapController)).start(); //get the nearest taxi from the database
 							else if(triggerButton == clientMap.getExitButton()){
 								new Thread(new SocketWriter(mapController, conn, true)).start(); //boolean true signifies that it is requesting to disconnect					
 							}else if(triggerButton == clientMap.getDisconnectButton()){
@@ -418,20 +492,5 @@ public class MapController implements LocationListener, OnClickListener {
 	public Position getPosition(){
 		System.out.println("Taxi Log: Returning an instance of position");
 		return position;
-	}
-	
-	public boolean isPassengerServerAlive(){
-		System.out.println("Taxi Log: Returning passenger server status: "+isPassengerServerRunning);
-		return isPassengerServerRunning;
-	}
-	
-	public void setPassengerServerAlive(){
-		System.out.println("Taxi Log: Setting passenger server status to alive");
-		isPassengerServerRunning = true;
-	}
-	
-	public void killPassengerServer(){
-		System.out.println("Taxi Log: Setting passenger server status to dead");
-		isPassengerServerRunning = false;
-	}
+	}	
 }

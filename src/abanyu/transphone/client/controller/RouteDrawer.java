@@ -9,20 +9,20 @@ import org.json.JSONObject;
 
 import abanyu.transphone.client.model.Map;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-public class RouteDrawer extends AsyncTask<Void, Void, String> {
+public class RouteDrawer implements Runnable{
 	//parameters for onPreExecute, doInBackground, onPostExecute respectively
 
 	private Map map;
 	private String url;
 	private MapController mc;
 	private Handler handler;
+	private String mJsonizedStringUrl;
 	
 	public RouteDrawer(Map pMap, String stringUrl, MapController mapController){
 		map = pMap;
@@ -33,6 +33,7 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 	  handler.post(new Runnable() {				
 	  	@Override
 	  	public void run() {
+	  		System.out.println("Taxi Log: now showing progress dialog");
 	  		mc.getProgressDialog().setMessage("Updating Route to the taxi Location");
 	  		mc.getProgressDialog().show();
 	  	}
@@ -40,28 +41,23 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 	}
 
 	@Override
-	protected String doInBackground(Void... arg0) {
+	public void run() {
+		System.out.println("Taxi Log: drawing route......... do in background");
 		JSONParser jParser = new JSONParser();
-		String mJsonizedStringUrl = jParser.getJSONfromURL(url);
-		return mJsonizedStringUrl;
-	}
-	
-	protected void onPostExecute(String jsonizedStringUrlResult) {
-		super.onPostExecute(jsonizedStringUrlResult);
-		
-		if(jsonizedStringUrlResult != null)
-			drawPath(jsonizedStringUrlResult);
+		mJsonizedStringUrl = jParser.getJSONfromURL(url);
+
+		if(mJsonizedStringUrl != null)
 				
 	  handler = new Handler(Looper.getMainLooper());
 	  handler.post(new Runnable() {				
 	  	@Override
 	  	public void run() {
-	  		mc.getProgressDialog().setMessage("Updating Route to the taxi Location");
+	  		System.out.println("Taxi Log: now hiding progress dialog");
+				drawPath(mJsonizedStringUrl);
 	  		mc.getProgressDialog().hide();
-
 	  	}
 	  });
-	}		
+	}
 	
 	private void drawPath(String jsonizedStringUrl) {
 		try{
@@ -117,4 +113,5 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 	    }
 	    return poly;
 	}
+
 }

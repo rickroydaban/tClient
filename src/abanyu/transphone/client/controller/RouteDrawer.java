@@ -10,6 +10,8 @@ import org.json.JSONObject;
 import abanyu.transphone.client.model.Map;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -20,11 +22,21 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 	private Map map;
 	private String url;
 	private MapController mc;
+	private Handler handler;
 	
 	public RouteDrawer(Map pMap, String stringUrl, MapController mapController){
 		map = pMap;
 		url = stringUrl;
 		mc = mapController;
+	
+	  handler = new Handler(Looper.getMainLooper());
+	  handler.post(new Runnable() {				
+	  	@Override
+	  	public void run() {
+	  		mc.getProgressDialog().setMessage("Updating Route to the taxi Location");
+	  		mc.getProgressDialog().show();
+	  	}
+	  });
 	}
 
 	@Override
@@ -40,6 +52,15 @@ public class RouteDrawer extends AsyncTask<Void, Void, String> {
 		if(jsonizedStringUrlResult != null)
 			drawPath(jsonizedStringUrlResult);
 				
+	  handler = new Handler(Looper.getMainLooper());
+	  handler.post(new Runnable() {				
+	  	@Override
+	  	public void run() {
+	  		mc.getProgressDialog().setMessage("Updating Route to the taxi Location");
+	  		mc.getProgressDialog().hide();
+
+	  	}
+	  });
 	}		
 	
 	private void drawPath(String jsonizedStringUrl) {

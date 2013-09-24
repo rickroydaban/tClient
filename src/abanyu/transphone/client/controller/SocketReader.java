@@ -29,6 +29,7 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
 	private LatLng taxiCoordinates;
 	private LatLng destinationCoordinates;
 	protected LatLng passengerCoordinates;
+	private Handler handler;
 
   public SocketReader(ClientMap pClientMap, MapController pMapController, MyConnection pConn){	
     clientMap = pClientMap;
@@ -66,8 +67,11 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
 	        if(receivedObj instanceof MyTaxi){ //check if the object is an instance of a taxi object
 	  	      System.out.println("Taxi Log: A new connection from Taxi has been received!");
 
-	        	clientMap.runOnUiThread(new Runnable() {
-	            public void run() {
+    	  	  handler = new Handler(Looper.getMainLooper());
+    	  	  handler.post(new Runnable() {				
+    	  	  	@Override
+    	  	  	public void run() {
+  	      	  	System.out.println("Taxi Log: Prompting the taxi driver");
 	  	        	//manage the visibility of the map buttons
 	  	       		System.out.println("Taxi Log: Setting button visibilities");
 	  	        	clientMap.getContactButton().setVisibility(View.GONE);
@@ -75,8 +79,9 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
 	  	       		clientMap.getInfoButton().setVisibility(View.VISIBLE);
 	  	       		clientMap.getDisconnectButton().setVisibility(View.VISIBLE);
 	  	       		System.out.println("Taxi Log: Button visibilities set. OK!");	  	       		
-	           }
-	        	});
+    	  	  	}
+    	  	  });
+
 
 	        	if(mapController.getTaxi() == null)
 	       			System.out.println("Taxi Log: Assigning a NEW Taxi Information..");
@@ -93,11 +98,13 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
               passengerCoordinates = new LatLng(mapController.getPassenger().getCurLat(), mapController.getPassenger().getCurLng());
               taxiCoordinates = new LatLng(mapController.getTaxi().getCurLat(), mapController.getTaxi().getCurLng());
 
-		        	clientMap.runOnUiThread(new Runnable() {
-		            public void run() {
+      	  	  handler = new Handler(Looper.getMainLooper());
+      	  	  handler.post(new Runnable() {				
+      	  	  	@Override
+      	  	  	public void run() {
 		         			mapController.updateMarker(passengerCoordinates, taxiCoordinates);
-		           }
-		        	});
+      	  	  	}
+      	  	  });
             }else if(mapController.getTaxi().getStatus() == TaxiStatus.occupied){
          			System.out.println("Taxi Log: You have just entered in the taxi. Showing route to your destination");
        				//change display of routes as soon as the passenger has entered the taxi before

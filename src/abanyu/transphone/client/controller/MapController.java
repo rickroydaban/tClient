@@ -176,11 +176,12 @@ public class MapController implements LocationListener, OnClickListener {
 		System.out.println("Taxi Log: Updating Route...");		
 		String url = makeJsonCompatibleUrlStr(currentCoordinates.latitude, currentCoordinates.longitude, 
 											  targetCoordinates.latitude, targetCoordinates.longitude);
-		progressDialog.setMessage("Updating Route to the taxi Location");
-		progressDialog.show();
 		new RouteDrawer(map, url, mapController).execute();
-		progressDialog.hide();
-		map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentCoordinates, 16), 2000);
+		
+		if(myTaxi.getStatus()==TaxiStatus.occupied)
+			map.animateCamera(CameraUpdateFactory.newLatLngZoom(targetCoordinates, 16), 2000);
+		else
+			map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentCoordinates, 16), 2000);
 	}
 
 	public void addMapClickListener(){

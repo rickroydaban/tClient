@@ -45,6 +45,11 @@
         </activity>
         
         <activity 
+            android:name="abanyu.transphone.client.view.SplashScreen"
+            android:launchMode="singleTask" >
+        </activity>
+        
+        <activity 
             android:name="abanyu.transphone.client.view.RequestedTaxiData"
             android:launchMode="singleTask" >
         </activity>

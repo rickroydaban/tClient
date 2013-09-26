@@ -44,7 +44,7 @@ public class SocketWriter implements Runnable{
 	    
 	    if(!isDisconnecting){
 		    System.out.println("Taxi Log: Sending this passenger instance to the server for registration or information update");
-	    	serverIn.writeObject("clientDisconnect:"+mapController.getPassenger());
+	    	serverIn.writeObject(mapController.getPassenger());
 		    serverIn.flush(); //REQUIRED to successfuly write the object to the socket
 		    System.out.println("Taxi Log: Passenger "+mapController.getPassenger().getRequestedTaxi()+" was successfully sent to server!");
 	    }else{
@@ -57,7 +57,7 @@ public class SocketWriter implements Runnable{
 	  	  
 		    //unregister this object in the  server
 		    System.out.println("Taxi Log: Sending a disconnection request to the server");
-	    	serverIn.writeObject(mapController.getPassenger().getIp());	//sends the server its ip to determine which server is to unregister    	
+	    	serverIn.writeObject("clientDisconnect:"+mapController.getPassenger().getIp());	//sends the server its ip to determine which server is to unregister    	
 		    serverIn.flush(); //REQUIRED to successfuly write the object to the socket
 		    System.out.println("Taxi Log: Successfully Sent a disconnection request to the server");
 

@@ -5,7 +5,6 @@ import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import com.google.android.gms.maps.model.LatLng;
-import abanyu.transphone.client.view.ClientMap;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,49 +23,48 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
   private ServerSocket passengerServerSocket;
   private Object receivedObj;
   //LOCAL VARIABLES
-  private ClientMap clientMap;
   private MapController mapController;
 	private LatLng taxiCoordinates;
 	private LatLng destinationCoordinates;
 	protected LatLng passengerCoordinates;
 	private Handler handler;
 
-  public SocketReader(ClientMap pClientMap, MapController pMapController, MyConnection pConn){	
-    clientMap = pClientMap;
+  public SocketReader(MapController pMapController, MyConnection pConn){	
     mapController = pMapController;
     conn = pConn;
     
     System.out.println("Taxi Log: =");		
     System.out.println("Taxi Log: SocketReader Constructor process finished!");
     System.out.println("Taxi Log: =");
- }
-  
+  }
+    
   protected void onPreExecute(){
-    super.onPreExecute();
-    if(mapController.getTaxi() == null){ //if the passenger has successfully retrieved the nearest taxi from the database
-      try {
-      	System.out.println("Taxi Log: Creating a Passenger Socket Reader");
-				passengerServerSocket = new ServerSocket(conn.getPassengerPort());
-				System.out.println("Taxi Log: Passenger Socket Reader created! Setting the passenger server status to be running");
-				
-      	if(mapController.getTaxi()==null){
-					handler = new Handler(Looper.getMainLooper());
-		  	  handler.post(new Runnable() {				
-		  	  	@Override
-		  	  	public void run() {
-		  	    	mapController.getProgressDialog().setMessage("Waiting for taxi with plate number: "+mapController.getPassenger().getRequestedTaxi()+" to respond");
-		  	    	mapController.getProgressDialog().show();
-		  	  	}
-		  	  });
-      	}
-      }catch (Exception e) {
-      	System.out.println("Taxi Log: Exception on Socket Reader Pre execute: "+e.getMessage());
-      }
+  	super.onPreExecute();
+  	
+		try {
+    	System.out.println("Taxi Log: Creating a Passenger Socket Reader");
+			passengerServerSocket = new ServerSocket(conn.getPassengerPort());
+			System.out.println("Taxi Log: Passenger Socket Reader created! Setting the passenger server status to be running");
+			  	  
+    }catch (Exception e) {
+    	System.out.println("Taxi Log: Exception on Socket Reader Pre execute: "+e.getMessage());
     }
+
   }
   
   @Override
   protected Void doInBackground(Void... params) {
+  	while(!mapController.hasTaxiRequest()){
+  	}
+//	  handler = new Handler(Looper.getMainLooper());
+//	  handler.post(new Runnable() {				
+//	  	@Override
+//	  	public void run() {
+//	  		mapController.getProgressDialog().setMessage("Waiting for the requested taxi to accept");
+//   			mapController.getProgressDialog().show();
+//	  	}
+//	  });
+	  
   	while(mapController.hasTaxiRequest()){ //accept taxi updates while taxi is open for taxi updates
       try {      	
 				passengerSocket = passengerServerSocket.accept();
@@ -84,10 +82,10 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
   	      	  	System.out.println("Taxi Log: Prompting the taxi driver");
 	  	        	//manage the visibility of the map buttons
 	  	       		System.out.println("Taxi Log: Setting button visibilities");
-	  	        	clientMap.getContactButton().setVisibility(View.GONE);
-	  	       		clientMap.getExitButton().setVisibility(View.GONE);
-	  	       		clientMap.getInfoButton().setVisibility(View.VISIBLE);
-	  	       		clientMap.getDisconnectButton().setVisibility(View.VISIBLE);
+	  	        	mapController.getView().getContactButton().setVisibility(View.GONE);
+	  	        	mapController.getView().getExitButton().setVisibility(View.GONE);
+	  	        	mapController.getView().getInfoButton().setVisibility(View.VISIBLE);
+	  	        	mapController.getView().getDisconnectButton().setVisibility(View.VISIBLE);
 	  	       		System.out.println("Taxi Log: Button visibilities set. OK!");	  	       		
     	  	  	}
     	  	  });
@@ -134,14 +132,16 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
 	    	  	  handler.post(new Runnable() {				
 	    	  	  	@Override
 	    	  	  	public void run() {
+	    	  	  		mapController.getProgressDialog().hide();
 	    	  	  		mapController.makeToast("WARNING! SHOULD NOT BE DONE HERE @@@@@@@@@@@@@");
 	    	  	  	}
 	    	  	  });
        				
+	    	  	  System.out.println("WARNING! SHOULD NOT BE DONE HERE @@@@@@@@@@@@@");
+     					mapController.incrementTaxiIndex();
        				if(mapController.getRetrievedTaxiCount()>0 && mapController.getTaxiIndex()<mapController.getRetrievedTaxiCount()){
-       					mapController.incrementTaxiIndex();
 
-       					mapController.intitiateRequest(mapController.getTaxiList().get(mapController.getTaxiIndex()).split(";"));       					
+//       					mapController.initiateRequest();       					
        				}else{      	  	  
        					mapController.setHasTaxiRequest(false); //to stop listening
        					handler = new Handler(Looper.getMainLooper());
@@ -161,52 +161,31 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
 	        		System.out.println("Taxi Log: Request Resend From Taxi");
 	        	}else if(receivedObj.equals("exitFromServer")){
 	        		System.out.println("Taxi Log: Server permits to exit. Exiting Application..");
-	            Handler handler = new Handler(Looper.getMainLooper());
+	            handler = new Handler(Looper.getMainLooper());
 	    	  	  handler.post(new Runnable() {				
 	    	  	  	@Override
 	    	  	  	public void run() {
-	  	        		clientMap.finish();
+	    	  	  		mapController.getView().finish();
 	  							Process.killProcess(Process.myPid());
 	    	  	  	}
 	    	  	  });
 	        	}else if(receivedObj.equals("tReject")){
-       				if(mapController.getRetrievedTaxiCount()>0 && mapController.getTaxiIndex()<mapController.getRetrievedTaxiCount()){
-       					mapController.incrementTaxiIndex();
-
-       					mapController.intitiateRequest(mapController.getTaxiList().get(mapController.getTaxiIndex()).split(";"));       					
-       				}else{      	  	  
+	        		System.out.println("Taxi Log: Checking if "+mapController.getTaxiIndex()+" <"+mapController.getRetrievedTaxiCount());
+   						mapController.incrementTaxiIndex();
+     					System.out.println("Taxi Log: Incrementing....");
+     					if(mapController.getTaxiIndex()<mapController.getRetrievedTaxiCount()){
+  	            handler = new Handler(Looper.getMainLooper());
 	      	  	  handler.post(new Runnable() {				
 	      	  	  	@Override
 	      	  	  	public void run() {
 	      	  	  		mapController.getProgressDialog().hide();
 	      	  	  		mapController.makeToast("Request rejected. Moving on...");
+	      	  	  		System.out.println("Taxi Log: Has Still Another taxi to retrieve data");
+	      	  	  		System.out.println("Taxi Log: Initiating request....");
+	      	  	  		mapController.initiateRequest();
 	      	  	  	}
 	      	  	  });       					
-
-	      	  	  mapController.setHasTaxiRequest(false); //to stop listening
-       					handler = new Handler(Looper.getMainLooper());
-	      	  	  handler.post(new Runnable() {				
-	      	  	  	@Override
-	      	  	  	public void run() {
-	      	  	  		mapController.getProgressDialog().hide();
-	      	  	  		mapController.makeToast("Sorry no more taxi left to accomodate your request. Please Try Again.");
-	      	  	  	}
-	      	  	  });       					
-       				}
-	        	}else if(receivedObj.equals("tCancel")){
-       				if(mapController.getRetrievedTaxiCount()>0 && mapController.getTaxiIndex()<mapController.getRetrievedTaxiCount()){
-       					mapController.incrementTaxiIndex();
-
-       					mapController.intitiateRequest(mapController.getTaxiList().get(mapController.getTaxiIndex()).split(";"));       					
        				}else{      	  	  
-	      	  	  handler.post(new Runnable() {				
-	      	  	  	@Override
-	      	  	  	public void run() {
-	      	  	  		mapController.getProgressDialog().hide();
-	      	  	  		mapController.makeToast("Request Cancelled. Moving on...");
-	      	  	  	}
-	      	  	  });       					
-
 	      	  	  mapController.setHasTaxiRequest(false); //to stop listening
        					handler = new Handler(Looper.getMainLooper());
 	      	  	  handler.post(new Runnable() {				
@@ -214,16 +193,74 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
 	      	  	  	public void run() {
 	      	  	  		mapController.getProgressDialog().hide();
 	      	  	  		mapController.makeToast("Sorry no more taxi left to accomodate your request. Please Try Again.");
+	      	  	  		mapController.cancelRequest();
 	      	  	  	}
 	      	  	  });       					
        				}
+	        	}else if(receivedObj.equals("tFinished")){
+      	  	  mapController.setHasTaxiRequest(false); //to stop listening
+     					handler = new Handler(Looper.getMainLooper());
+      	  	  handler.post(new Runnable() {				
+      	  	  	@Override
+      	  	  	public void run() {
+      	  	  		mapController.getProgressDialog().hide();
+      	  	  		mapController.makeToast("Reached at the Destination.");
+      	  	  		mapController.cancelRequest();
+      	  	  	}
+      	  	  });       						        		
+	        	}else if(receivedObj.equals("tCancel")){
+      	  	  mapController.setHasTaxiRequest(false); //to stop listening
+     					handler = new Handler(Looper.getMainLooper());
+      	  	  handler.post(new Runnable() {				
+      	  	  	@Override
+      	  	  	public void run() {
+      	  	  		mapController.getProgressDialog().hide();
+      	  	  		mapController.makeToast("Taxi Has Cancelled Your Request. Finding new Taxi List");
+      	  	  		mapController.cancelRequest();
+      	  	  	}
+      	  	  });       
+      	  	  
+      	  	  new Thread(new NearestTaxiGetter(conn, mapController)).start();      	  	  
+//     					mapController.incrementTaxiIndex();
+//     					System.out.println("The taxi has cancelled the request. Moving on to the next taxi data");
+//       				if(mapController.getRetrievedTaxiCount()>0 && mapController.getTaxiIndex()<mapController.getRetrievedTaxiCount()){
+//       					mapController.initiateRequest();       					
+//       					handler = new Handler(Looper.getMainLooper());
+//	      	  	  handler.post(new Runnable() {				
+//	      	  	  	@Override
+//	      	  	  	public void run() {
+//	      	  	  		mapController.getProgressDialog().hide();
+//	      	  	  		mapController.makeToast("Request cancelled by the Taxi Driver.");
+//	      	  	  		mapController.cancelRequest();
+//	      	  	  	}
+//	      	  	  });       					
+//       				}else{      	  	  
+//	      	  	  handler.post(new Runnable() {				
+//	      	  	  	@Override
+//	      	  	  	public void run() {
+//	      	  	  		mapController.getProgressDialog().hide();
+//	      	  	  		mapController.makeToast("Request Cancelled. Moving on...");
+//	      	  	  	}
+//	      	  	  });       					
+//
+//	      	  	  mapController.setHasTaxiRequest(false); //to stop listening
+//       					handler = new Handler(Looper.getMainLooper());
+//	      	  	  handler.post(new Runnable() {				
+//	      	  	  	@Override
+//	      	  	  	public void run() {
+//	      	  	  		mapController.getProgressDialog().hide();
+//	      	  	  		mapController.makeToast("Sorry no more taxi left to accomodate your request. Please Try Again.");
+//	      	  	  		mapController.cancelRequest();
+//	      	  	  	}
+//	      	  	  });       					
+//       				}
 	        	}else{
 	        		System.out.println("Taxi Log: unhandled received object retrieval in socket reader..");
 	            Handler handler = new Handler(Looper.getMainLooper());
 	    	  	  handler.post(new Runnable() {				
 	    	  	  	@Override
 	    	  	  	public void run() {
-	  	            Toast.makeText(clientMap, "WARNING! SHOULD NOT BE DONE HERE @@@@@@@@@@@@@ NO ELSE HERE", Toast.LENGTH_LONG).show();
+	  	            Toast.makeText(mapController.getView(), "WARNING! SHOULD NOT BE DONE HERE @@@@@@@@@@@@@ NO ELSE HERE", Toast.LENGTH_LONG).show();
 			            mapController.cancelRequest();//calls to send a new request without changing the passenger identification
 	    	  	  	}
 	    	  	  });
@@ -233,15 +270,10 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
 	      	System.out.println("Taxi Log: The received object is null. Please Report this to the developer");
 	      }	      
 			} catch (Exception e) {
-				System.out.println("Taxi Log: error occured in Socket reader while trying to retrieve an object: "+e.getMessage());
+//				System.out.println("Taxi Log: error occured in Socket reader while trying to retrieve an object: "+e.getMessage());
 			}      
   	}
   	
-  	System.out.println("Taxi Log: Socket reader has been stopped but not yet closed");
-		return null;    	
-  }
-  
-  public void closeConnection() {
   	System.out.println("Taxi Log: Closing the socket reader...");
     try {
     	if(passengerInputStream!=null)
@@ -252,7 +284,9 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
       	passengerServerSocket.close();
     }catch (IOException e) {
     	System.out.println("Taxi Log: Exception while closing connection in the socket reader: "+e.getMessage());
-    	Toast.makeText(clientMap, "Exception while closing connection in the socket reader", Toast.LENGTH_LONG).show();
+    	Toast.makeText(mapController.getView(), "Exception while closing connection in the socket reader", Toast.LENGTH_LONG).show();
     }
+		return null;    	
   }
+  
 }

@@ -2,7 +2,6 @@ package abanyu.transphone.client.controller;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -23,6 +22,9 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Process;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,6 +37,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.maps.MapView.ReticleDrawMode;
 
 import connections.MyConnection;
 import data.TaxiStatus;
@@ -50,13 +53,12 @@ public class MapController implements LocationListener, OnClickListener {
 	private AlertDialog alertDialog;
 	private ProgressDialog progressDialog;
 	private EditText nameField;
-	private List<String> taxiList;
+	private String [] taxiList;
 	private int taxiIndex, taxiETA, retrievedTaxiCnt;
 	public String expectedReply, serverReply;
 	private boolean hasTaxiRequest, isWaitingForServerReply;
 	
 	public MapController(ClientMap pClientMap){
-		taxiList = new ArrayList<String>();
 		taxiIndex = 0;
 		hasTaxiRequest = false;
 		isWaitingForServerReply = false;
@@ -102,7 +104,6 @@ public class MapController implements LocationListener, OnClickListener {
 			focusCurrentPosition(); //map focuses on your current location
 	    System.out.println("Taxi Log: Adding Map Click Listener");
 			addMapClickListener();
-			
 	    System.out.println("Taxi Log: Start Reading for Server replies...");			
 		}else{
 			System.out.println("Taxi Log: WARNING. Map is null");
@@ -111,15 +112,13 @@ public class MapController implements LocationListener, OnClickListener {
     System.out.println("Taxi Log: =");		
     System.out.println("Taxi Log: MapController Constructor process finished!");
     System.out.println("Taxi Log: =");
-	  new SocketReader(clientMap, mapController, conn).execute();		
 	}
-
+	
 	public boolean hasTaxiRequest(){
 		return hasTaxiRequest;
 	}
 	
-	
-	public ClientMap getControllerView(){
+	public ClientMap getView(){
 		return clientMap;
 	}
 	
@@ -132,38 +131,50 @@ public class MapController implements LocationListener, OnClickListener {
 		return true;
 	}
 	
-	public void intitiateRequest(String [] dbTaxi){
-		conn.setServerIp(dbTaxi[1]);//server IP
-		mapController.getPassenger().setRequestedTaxi(dbTaxi[0]); //plate number
-		mapController.setTaxiEta(Integer.parseInt(dbTaxi[2])); //estimated time of arrival
-
-		//make dialog box
-		LayoutInflater li = LayoutInflater.from(mapController.getControllerView());
-		View promptView = li.inflate(R.layout.confirmrequest, null);		
-		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mapController.getControllerView());
-		alertDialogBuilder.setView(promptView);
+	public void initiateRequest(){
+		System.out.println("Taxi Log: Initiating Request from mapController");
+		System.out.println("Taxi Log: Checking if taxiindex("+taxiIndex+") "+"< retrieved taxi count: "+retrievedTaxiCnt);
+		if(taxiIndex<retrievedTaxiCnt){
+			System.out.println("Taxi Log: Checked! Has still another taxi info");
+			String [] dbTaxi = taxiList[taxiIndex].split(";");
 		
-		TextView tv = (TextView)promptView.findViewById(R.id.statementField);
-		tv.setText("Estimated Time of Arrival for "+dbTaxi[0]+" is "+dbTaxi[2]+" seconds");
-		
-		//Set dialog message
-		alertDialogBuilder.setCancelable(false).
-				setPositiveButton("Send Request", new DialogInterface.OnClickListener() {		
-					@Override
-					public void onClick(DialogInterface dialog, int which) {						
-						new Thread(new SocketWriter(mapController, conn, false)).start();
-					}
-				});
-		
-				alertDialogBuilder.setCancelable(false).setNegativeButton("Cancel Request", new DialogInterface.OnClickListener() {		
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-					  alertDialog.dismiss();
-					}
-				});
-		
-		alertDialog = alertDialogBuilder.create();
-		alertDialog.show();
+			conn.setServerIp(dbTaxi[1]);//server IP
+			mapController.getPassenger().setRequestedTaxi(dbTaxi[0]); //plate number
+			mapController.setTaxiEta(Integer.parseInt(dbTaxi[2])); //estimated time of arrival
+			//make dialog box
+			System.out.println("Taxi Log: Showing Dialog to Confirm Request");
+			LayoutInflater li = LayoutInflater.from(clientMap);
+			View promptView = li.inflate(R.layout.confirmrequest, null);		
+			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(clientMap);
+			alertDialogBuilder.setView(promptView);
+			
+			TextView tv = (TextView)promptView.findViewById(R.id.statementField);
+			tv.setText("Estimated Time of Arrival for "+dbTaxi[0]+" is "+dbTaxi[2]+" seconds");
+			
+			//Set dialog message
+			alertDialogBuilder.setCancelable(false).
+					setPositiveButton("Send Request", new DialogInterface.OnClickListener() {		
+						@Override
+						public void onClick(DialogInterface dialog, int which) {	
+						  new SocketReader(mapController, conn).execute();		
+		  	    	hasTaxiRequest = true;
+		  	  		mapController.getProgressDialog().setMessage("Waiting for the requested taxi to accept");
+		     			mapController.getProgressDialog().show();
+							new Thread(new SocketWriter(mapController, conn, false)).start();
+						}
+					});
+			
+					alertDialogBuilder.setCancelable(false).setNegativeButton("Cancel Request", new DialogInterface.OnClickListener() {		
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							hasTaxiRequest = false;
+						  alertDialog.dismiss();
+						}
+					});
+			
+			alertDialog = alertDialogBuilder.create();
+			alertDialog.show();
+		}
 	}
 	
 	public void incrementTaxiIndex(){
@@ -194,12 +205,23 @@ public class MapController implements LocationListener, OnClickListener {
 		taxiETA = eta;
 	}
 	
-	public List<String> getTaxiList(){
-		return taxiList;
+	public void setTaxiList(String [] pTaxiList){
+		if(retrievedTaxiCnt<1){
+			makeToast("No available taxi Found.");
+		}else{
+			System.out.println("Taxi Log: Setting Taxi List...");
+			taxiList = pTaxiList;
+			System.out.println("Taxi Log: Taxi List Set! initiating request...");
+			initiateRequest();
+		}
 	}
 	
 	public int getTaxiIndex(){
 		return taxiIndex;
+	}
+	
+	public void resetTaxiIndex(){
+		taxiIndex = 0;
 	}
 	
 	@Override
@@ -303,7 +325,7 @@ public class MapController implements LocationListener, OnClickListener {
 			System.out.println("Taxi Log: Prompting a name input dialog...");
 			
 			if(map.getDesMarkerOptions()!=null){
-				makeDialog(false,R.layout.prompt_name,clientMap.getContactButton());
+				makeDialog(true,R.layout.prompt_name,clientMap.getContactButton());
 			}else{
 				Toast.makeText(clientMap, "Please mark your destination first", Toast.LENGTH_LONG).show();
 			}
@@ -349,7 +371,8 @@ public class MapController implements LocationListener, OnClickListener {
 							if(triggerButton == clientMap.getContactButton())								
 								new Thread(new NearestTaxiGetter(conn, mapController)).start(); //get the nearest taxi from the database
 							else if(triggerButton == clientMap.getExitButton()){
-								new Thread(new SocketWriter(mapController, conn, true)).start(); //boolean true signifies that it is requesting to disconnect					
+    	  	  		clientMap.finish();
+  							Process.killProcess(Process.myPid());
 							}else if(triggerButton == clientMap.getDisconnectButton()){
 								new Thread(new SocketWriter(mapController, conn, true)).start();
 							}else{
@@ -387,7 +410,7 @@ public class MapController implements LocationListener, OnClickListener {
 	  clientMap.getDisconnectButton().setVisibility(Button.INVISIBLE);
 	  myTaxi = null; //restart the nearest taxi data;
 
-	  updateMarker(new LatLng(myPassenger.getCurLat(), myPassenger.getCurLng()), "Destination");
+	  updateMarker(new LatLng(myPassenger.getCurLat(), myPassenger.getCurLng()), "YourLocation");
 	  Toast.makeText(clientMap, "Touch the map to mark your destination", Toast.LENGTH_LONG).show();
 	}
 	

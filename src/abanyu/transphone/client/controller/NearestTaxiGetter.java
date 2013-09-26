@@ -1,6 +1,8 @@
 package abanyu.transphone.client.controller;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -10,15 +12,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import abanyu.transphone.client.R;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 import connections.MyConnection;
 
 public class NearestTaxiGetter implements Runnable{
@@ -38,8 +33,8 @@ public class NearestTaxiGetter implements Runnable{
 	private JSONObject jo;
 	private String plateNo;
 	private String servrIP;
-	private int eta;
-	
+	private String eta;
+	private String[] taxiList;	
   //CONSTRUCTOR	
   public NearestTaxiGetter(MyConnection pConn, MapController pMapController){    
     //dynamically calculates the nearest taxi to the passenger through php scripting
@@ -89,7 +84,8 @@ public class NearestTaxiGetter implements Runnable{
 	    	mapController.getProgressDialog().hide();
 	  	}
 	  });
-
+	  mapController.resetTaxiIndex();
+	  
 	  if(!result.equals("0")){
 			try {
 				taxis = new JSONArray(result);
@@ -102,20 +98,27 @@ public class NearestTaxiGetter implements Runnable{
 	  	  	}
 	  	  });
 	  	
-	  	  mapController.setHasTaxiRequest(true);
+	  	  System.out.println("TAXI LOG: Setting retrieved taxi count: "+taxis.length());
 	  	  mapController.setRetrievedTaxiCount(taxis.length());
 	  	  
 	  	  //update the taxi list in the map controller
-				for (int i = 0; i < mapController.getRetrievedTaxiCount(); i++) {
-					jo = taxis.getJSONObject(i);
+	  	  taxiList = new String[taxis.length()];	  	  
+				for (int ctr=0; ctr < taxiList.length; ctr++) {
+					jo = taxis.getJSONObject(ctr);
 					plateNo = jo.getString("plateNo");
 					servrIP = jo.getString("servrIP");
-					eta = jo.getInt("eta");
+					eta = jo.getString("eta");
 					
-					mapController.getTaxiList().add(plateNo+";"+servrIP+";"+eta);
+					taxiList[ctr] = plateNo+";"+servrIP+";"+eta;
 				}
-				
-				mapController.intitiateRequest(mapController.getTaxiList().get(mapController.getTaxiIndex()).split(";"));				
+
+				handler = new Handler(Looper.getMainLooper());
+	  	  handler.post(new Runnable() {				
+	  	  	@Override
+	  	  	public void run() {
+	  				mapController.setTaxiList(taxiList);				
+	  	  	}
+	  	  });
 			} catch (JSONException e) {
 				System.out.println("Taxi Info: JSON Exception at NearestTaxiGetter: "+e.getMessage());
 			}	  	

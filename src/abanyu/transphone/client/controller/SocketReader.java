@@ -220,7 +220,7 @@ public class SocketReader extends AsyncTask<Void, Void, Void> {
       	  	  	}
       	  	  });       
       	  	  
-      	  	  new Thread(new NearestTaxiGetter(conn, mapController)).start();      	  	  
+      	  	  new Thread(new NearestTaxiGetter(conn, mapController, mapController.getMaxDistance().getText().toString())).start();      	  	  
 //     					mapController.incrementTaxiIndex();
 //     					System.out.println("The taxi has cancelled the request. Moving on to the next taxi data");
 //       				if(mapController.getRetrievedTaxiCount()>0 && mapController.getTaxiIndex()<mapController.getRetrievedTaxiCount()){

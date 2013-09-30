@@ -36,7 +36,7 @@ public class NearestTaxiGetter implements Runnable{
 	private String eta;
 	private String[] taxiList;	
   //CONSTRUCTOR	
-  public NearestTaxiGetter(MyConnection pConn, MapController pMapController){    
+  public NearestTaxiGetter(MyConnection pConn, MapController pMapController, String maxDistance){    
     //dynamically calculates the nearest taxi to the passenger through php scripting
     conn = pConn;
     mapController = pMapController;
@@ -46,6 +46,8 @@ public class NearestTaxiGetter implements Runnable{
     											append(pMapController.getPassenger().getCurLat()).
     											append("&arg2=").
     											append(pMapController.getPassenger().getCurLng()).
+    											append("&arg3=").
+    											append(maxDistance).
     											toString();
     System.out.println("Taxi Log: =");
     System.out.println("Taxi Log: NearestTaxiGetter Constructor finished with url: "+url);

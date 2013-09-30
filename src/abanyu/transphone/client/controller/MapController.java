@@ -28,6 +28,7 @@ import android.os.Process;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.webkit.WebView.FindListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -52,7 +53,7 @@ public class MapController implements LocationListener, OnClickListener {
 	private ClientMap clientMap;
 	private AlertDialog alertDialog;
 	private ProgressDialog progressDialog;
-	private EditText nameField;
+	private EditText nameField, maxDistField;
 	private String [] taxiList;
 	private int taxiIndex, taxiETA, retrievedTaxiCnt;
 	public String expectedReply, serverReply;
@@ -319,6 +320,10 @@ public class MapController implements LocationListener, OnClickListener {
 		});		
 	}
 	
+	public EditText getMaxDistance(){
+		return maxDistField;
+	}
+	
 	@Override
 	public void onClick(View v) {
 		if(v.equals(clientMap.getContactButton())){
@@ -357,19 +362,22 @@ public class MapController implements LocationListener, OnClickListener {
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(clientMap);
 		alertDialogBuilder.setView(promptView);
 		
-		if(requiresInput) //a text input is required
+		if(requiresInput){ //a text input is required
 			nameField = (EditText) promptView.findViewById(R.id.nameField);
+			maxDistField = (EditText)promptView.findViewById(R.id.maxDistField);
+			}
 		
 		//Set dialog message
 		alertDialogBuilder.setCancelable(false).
 				setPositiveButton("OK", new DialogInterface.OnClickListener() {		
+
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						if(requiresInput)
+						if(requiresInput){
 							myPassenger.setPassengerName(nameField.getText().toString());
-					  
+						}
 							if(triggerButton == clientMap.getContactButton())								
-								new Thread(new NearestTaxiGetter(conn, mapController)).start(); //get the nearest taxi from the database
+								new Thread(new NearestTaxiGetter(conn, mapController,maxDistField.getText().toString())).start(); //get the nearest taxi from the database
 							else if(triggerButton == clientMap.getExitButton()){
     	  	  		clientMap.finish();
   							Process.killProcess(Process.myPid());
